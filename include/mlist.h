@@ -5,6 +5,10 @@
 extern "C" {
 #endif
 
+#include "stdio.h"
+#include "stdint.h"
+#include "stdlib.h"
+
 #define MTRUE      (1)
 #define MFALSE     (0)
 
@@ -28,178 +32,178 @@ extern "C" {
 typedef struct mlist {
     struct mlist *prev;
     struct mlist *next;
-} MLIST;
+} mlist;
 
 #define MLIST_POISON        ((struct mlist *)0)
 
-static inline void __mlist_add(MLIST *p_list, MLIST *p_node)
+static inline void __mlist_add(mlist *head, mlist *node)
 {
-    p_node->prev = p_list;
-    p_node->next = p_list->next;
-    p_list->next->prev = p_node;
-    p_list->next = p_node;
+    node->prev = head;
+    node->next = head->next;
+    head->next->prev = node;
+    head->next = node;
 }
 
-static inline void __mlist_del(MLIST *p_node)
+static inline void __mlist_del(mlist *node)
 {
-    p_node->prev->next = p_node->next;
-    p_node->next->prev = p_node->prev;
+    node->prev->next = node->next;
+    node->next->prev = node->prev;
 }
 
 
 /**
- * @brief 静态声明并初始化MLIST节点
+ * @brief 静态声明并初始化mlist节点
  * 
  * @param list 要声明的节点名
  */
-#define MLIST_INITIALIZE(list) \
-            MLIST list = { &(list) , &(list) }
+#define mlist_initialize(list) \
+            mlist list = { &(list) , &(list) }
 
 
 /**
  * @brief 初始化MLIST节点
  * 
- * @param p_list 待初始化的节点
+ * @param head 待初始化的节点
  */
-static inline void MLIST_INIT(MLIST *p_list)
+static inline void mlist_init(mlist *head)
 {
-    p_list->next = p_list;
-    p_list->prev = p_list;
+    head->next = head;
+    head->prev = head;
 }
 
 
 /**
  * @brief 反初始化某个节点
  * 
- * @param p_list 待重初始化的节点
+ * @param head 待重初始化的节点
  */
-static inline void MLIST_DEINIT(MLIST *p_list)
+static inline void mlist_deinit(mlist *head)
 {
-    __mlist_del(p_list);
-    p_list->next = MLIST_POISON;
-    p_list->prev = MLIST_POISON;
+    __mlist_del(head);
+    head->next = MLIST_POISON;
+    head->prev = MLIST_POISON;
 }
 
 
 /**
  * @brief 判断以链表是否为空
  * 
- * @param p_list MLIST节点
+ * @param head mlist节点
  * @return int 
  *              MTRUE  : 链表为空
  *              MFALSE : 链表不为空
  */
-static inline int MLIST_EMPTY(MLIST *p_list)
+static inline int mlist_empty(mlist *head)
 {
-    return (p_list->next == p_list)?(MTRUE):(MFALSE);
+    return (head->next == head)?(MTRUE):(MFALSE);
 }
 
 
 /**
  * @brief 将某个节点插入到链表中
  * 
- * @param p_list 待插入的链表
- * @param p_node 待插入的节点
+ * @param head 待插入的链表
+ * @param node 待插入的节点
  */
-static inline void MLIST_ADD(MLIST *p_list, MLIST *p_node)
+static inline void mlist_add(mlist *head, mlist *node)
 {
-    __mlist_add(p_list, p_node);
+    __mlist_add(head, node);
 }
 
 
 /**
  * @brief 将某个节点插入到链表中(尾插)
  * 
- * @param p_list 待插入的链表
- * @param p_node 待插入的节点
+ * @param head 待插入的链表
+ * @param node 待插入的节点
  */
-static inline void MLIST_ADD_TAIL(MLIST *p_list, MLIST *p_node)
+static inline void mlist_add_tail(mlist *head, mlist *node)
 {
-    __mlist_add(p_list->prev, p_node);
+    __mlist_add(head->prev, node);
 }
 
 
 /**
  * @brief 删除某个节点
  * 
- * @param p_node 待删除的节点
+ * @param node 待删除的节点
  */
-static inline void MLIST_DEL(MLIST *p_node)
+static inline void mlist_del(mlist *node)
 {
-    __mlist_del(p_node);
-    p_node->prev = MLIST_POISON;
-    p_node->next = MLIST_POISON;
+    __mlist_del(node);
+    node->prev = MLIST_POISON;
+    node->next = MLIST_POISON;
 }
 
 
 /**
  * @brief 获取链表中的第一个成员
  * 
- * @param p_list 链表头
+ * @param head 链表头
  */
-#define MLIST_FIRST(p_list) ((p_list)->next)
+#define mlist_first(head) ((head)->next)
 
 
 /**
  * @brief 遍历链表
  * 
- * @param p_item 指针, 用于获取每个节点
- * @param p_list 链表头
+ * @param ptr 指针, 用于获取每个节点
+ * @param head 链表头
  */
-#define MLIST_FOR_EACH(p_item, p_list) \
-    for ((p_item) = (p_list)->next; (p_item) != (p_list); (p_item) = (p_item)->next)
+#define mlist_for_each(ptr, head) \
+    for ((ptr) = (head)->next; (ptr) != (head); (ptr) = (ptr)->next)
 
 
 /**
  * @brief 遍历链表
  * 
- * @param p_item 指针, 用于获取每个节点
- * @param p_n 指针, 用于暂存下一个节点
- * @param p_list 链表头
+ * @param ptr 指针, 用于获取每个节点
+ * @param n 指针, 用于暂存下一个节点
+ * @param head 链表头
  */
-#define MLIST_FOR_EACH_SAFE(p_item, p_n, p_list) \
-    for ((p_item) = (p_list)->next, (p_n) = (p_item)->next; (p_item) != (p_list); \
-            (p_item) = (p_n), (p_n) = (p_item)->next)
+#define mlist_for_each_safe(ptr, n, head) \
+    for ((ptr) = (head)->next, (n) = (ptr)->next; (ptr) != (head); \
+            (ptr) = (n), (n) = (ptr)->next)
 
 
 /**
  * @brief 获取链表中第一个节点所属的对象
  * 
  * @param T 对象类型
- * @param p_list 链表头
+ * @param head 链表头
  * @param member 节点成员名
  */
-#define MLIST_FIRST_ENTRY(T, p_list, member) M_GET_OBJECT((p_list)->next, T, member)
+#define mlist_first_entry(T, head, member) M_GET_OBJECT((head)->next, T, member)
 
 
 /**
  * @brief 遍历链表, 获取每个对象
  * 
- * @param p_obj 指针, 用于获取每一个对象
+ * @param pos 指针, 用于获取每一个对象
  * @param T 对象类型
- * @param p_list 链表头
+ * @param head 链表头
  * @param member 节点成员名
  */
-#define MLIST_FOR_EACH_ENTRY(p_obj, T, p_list, member)       \
-    for((p_obj) = M_GET_OBJECT((p_list)->next, T, member);      \
-        &((p_obj)->member) != (p_list);                           \
-        (p_obj) = M_GET_OBJECT((p_obj)->member.next, T, member))
+#define mlist_for_each_entry(pos, T, head, member)       \
+    for((pos) = M_GET_OBJECT((head)->next, T, member);      \
+        &((pos)->member) != (head);                           \
+        (pos) = M_GET_OBJECT((pos)->member.next, T, member))
 
 
 /**
  * @brief 遍历链表, 获取每个对象
  * 
- * @param p_obj 指针, 用于获取每一个对象
- * @param p_n 指针, 用于暂存下一个对象
+ * @param pos 指针, 用于获取每一个对象
+ * @param n 指针, 用于暂存下一个对象
  * @param T 对象类型
- * @param p_list 链表头
+ * @param head 链表头
  * @param member 节点成员名
  */
-#define MLIST_FOR_EACH_ENTRY_SAFE(p_obj, p_n, T, p_list, member)   \
-    for((p_obj) = M_GET_OBJECT((p_list)->next, T, member),          \
-        (p_n) = M_GET_OBJECT((p_obj)->member.next, T, member);        \
-        &((p_obj)->member) != (p_list);                               \
-        (p_obj) = (p_n), (p_n) = M_GET_OBJECT((p_obj)->member.next, T, member))
+#define mlist_for_each_entry_safe(pos, n, T, head, member)   \
+    for((pos) = M_GET_OBJECT((head)->next, T, member),          \
+        (n) = M_GET_OBJECT((pos)->member.next, T, member);        \
+        &((pos)->member) != (head);                               \
+        (pos) = (n), (n) = M_GET_OBJECT((pos)->member.next, T, member))
 
 #ifdef __cplusplus
 }
