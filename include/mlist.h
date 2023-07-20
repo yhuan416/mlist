@@ -61,7 +61,7 @@ static inline void __mlist_del(mlist *node)
 
 
 /**
- * @brief 初始化MLIST节点
+ * @brief 初始化mlist节点
  * 
  * @param head 待初始化的节点
  */
